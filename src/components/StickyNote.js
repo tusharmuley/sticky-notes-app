@@ -1,29 +1,27 @@
 import React, { useRef, useEffect, useState } from "react";
-
 import "./StickyNote.css";
 
 function StickyNote({ note, onUpdate, onDelete, onTogglePin }) {
   const noteRef = useRef(null);
   const offset = useRef({ x: 0, y: 0 });
-  const [tempText, setTempText] = useState(note.text); // local temp state
+  const [tempText, setTempText] = useState(note.text);
 
-  // Debounced save after typing stops
+  // Debounced auto-save
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (tempText !== note.text) {
         onUpdate(note.id, { text: tempText });
       }
-    }, 1000); // ⏳ 1-second debounce
-
+    }, 1000);
     return () => clearTimeout(timeout);
   }, [tempText]);
 
-  // If the parent updates the text externally (e.g. via pin/unpin), sync it back
+  // Sync text if changed externally
   useEffect(() => {
     setTempText(note.text);
   }, [note.text]);
 
-
+  // Drag Handlers
   const startDrag = (e) => {
     if (e.target.tagName === "TEXTAREA" || e.target.className === "resize-handle") return;
     document.body.classList.add("no-select");
@@ -35,12 +33,6 @@ function StickyNote({ note, onUpdate, onDelete, onTogglePin }) {
     window.addEventListener("mouseup", stopDrag);
   };
 
-  const stopDrag = () => {
-    window.removeEventListener("mousemove", onDrag);
-    window.removeEventListener("mouseup", stopDrag);
-    document.body.classList.remove("no-select");
-  };
-
   const onDrag = (e) => {
     onUpdate(note.id, {
       x: e.clientX - offset.current.x,
@@ -48,6 +40,13 @@ function StickyNote({ note, onUpdate, onDelete, onTogglePin }) {
     });
   };
 
+  const stopDrag = () => {
+    window.removeEventListener("mousemove", onDrag);
+    window.removeEventListener("mouseup", stopDrag);
+    document.body.classList.remove("no-select");
+  };
+
+  // Resize Handlers
   const startResize = (e) => {
     document.body.classList.add("no-select");
     e.stopPropagation();
@@ -69,10 +68,6 @@ function StickyNote({ note, onUpdate, onDelete, onTogglePin }) {
     document.body.classList.remove("no-select");
   };
 
-  // const handleChange = (e) => {
-  //   onUpdate(note.id, { text: e.target.value });
-  // };
-
   return (
     <div
       ref={noteRef}
@@ -86,7 +81,7 @@ function StickyNote({ note, onUpdate, onDelete, onTogglePin }) {
       }}
       onMouseDown={startDrag}
     >
-      {/* 📌 Pin/Unpin Button */}
+      {/* 📌 Pin Button */}
       <button
         className="pin-btn"
         onClick={(e) => {
@@ -101,17 +96,14 @@ function StickyNote({ note, onUpdate, onDelete, onTogglePin }) {
       {/* ❌ Delete Button */}
       <button className="delete-btn" onClick={() => onDelete(note.id)}>×</button>
 
-      {/* 🕒 Timestamps */}
+      {/* 🕒 Timestamp */}
       <div className="note-timestamp">
         <div>🕒 Created: {new Date(note.createdAt).toLocaleString()}</div>
         <div>✏️ Edited: {new Date(note.updatedAt).toLocaleString()}</div>
       </div>
 
-      {/* 📝 Editable Text */}
-      <textarea
-          value={tempText}
-          onChange={(e) => setTempText(e.target.value)}
-        />
+      {/* 📝 Textarea */}
+      <textarea value={tempText} onChange={(e) => setTempText(e.target.value)} />
 
       {/* ↔️ Resize Handle */}
       <div className="resize-handle" onMouseDown={startResize}></div>

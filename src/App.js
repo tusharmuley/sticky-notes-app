@@ -11,7 +11,6 @@ function App() {
   const [search, setSearch] = useState("");
   const [showOnlyPinned, setShowOnlyPinned] = useState(false);
 
-
   useEffect(() => {
     localStorage.setItem("sticky-notes", JSON.stringify(notes));
   }, [notes]);
@@ -33,7 +32,7 @@ function App() {
       color: getRandomColor(),
       createdAt: now,
       updatedAt: now,
-      pinned: false
+      pinned: false,
     };
     setNotes((prev) => [...prev, newNote]);
   };
@@ -41,9 +40,7 @@ function App() {
   const updateNote = (id, updates) => {
     setNotes((prev) =>
       prev.map((note) =>
-        note.id === id
-          ? { ...note, ...updates, updatedAt: new Date().toISOString() }
-          : note
+        note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString() } : note
       )
     );
   };
@@ -54,91 +51,47 @@ function App() {
 
   const togglePin = (id) => {
     setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id ? { ...note, pinned: !note.pinned } : note
-      )
+      prev.map((note) => (note.id === id ? { ...note, pinned: !note.pinned } : note))
     );
   };
 
   const filteredNotes = notes
-    .filter((note) =>
-      note.text.toLowerCase().includes(search.toLowerCase())
-    )
-    .filter((note) => (showOnlyPinned ? note.pinned : true)) // 👈 Only pinned if toggled
-    .sort((a, b) => {
-      if (a.pinned === b.pinned) return 0;
-      return a.pinned ? -1 : 1; // 📌 pinned notes first
-    });
-
-
-
-  const sortedNotes = [...filteredNotes].sort((a, b) => b.pinned - a.pinned);
+    .filter((note) => note.text.toLowerCase().includes(search.toLowerCase()))
+    .filter((note) => (showOnlyPinned ? note.pinned : true))
+    .sort((a, b) => b.pinned - a.pinned); // pinned notes first
 
   return (
     <div>
-      <div style={{ margin: '10px', display: 'flex', gap: '10px' }}>
-        <button
-          onClick={addNote}
-          style={{
-            padding: '10px 18px',
-            borderRadius: '8px',
-            fontSize: '16px',
-            backgroundColor: '#4CAF50',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-            transition: 'background 0.2s ease, transform 0.1s ease',
-          }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#45a049'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
-          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
-          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          ➕ Add Note
-        </button>
-
-        <button
-          onClick={() => setShowOnlyPinned(!showOnlyPinned)}
-          style={{
-            padding: '10px 14px',
-            borderRadius: '8px',
-            fontSize: '16px',
-            backgroundColor: showOnlyPinned ? '#ff9800' : '#607d8b',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-          }}
-        >
-          {showOnlyPinned ? '📌 Showing Pinned' : '📍 Show Only Pinned'}
-        </button>
-
-        <input
-          type="text"
-          placeholder="Search notes..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-            flex: '1',
-          }}
-        />
-
-        <header className="app-header">
+      <header className="app-header">
+        <div className="header-bar">
           <div className="logo-title">
             <span className="logo">🗒️</span>
             <h1>Sticky Notes</h1>
           </div>
-        </header>
-      </div>
-      
+
+          <input
+            type="text"
+            placeholder="Search notes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+
+          <button className="primary-btn" onClick={addNote}>
+            ➕ Add Note
+          </button>
+
+          <button
+            className={`secondary-btn ${showOnlyPinned ? "pinned" : ""}`}
+            onClick={() => setShowOnlyPinned(!showOnlyPinned)}
+          >
+            {showOnlyPinned ? "📌 Showing Pinned" : "📍 Show Only Pinned"}
+          </button>
+        </div>
+      </header>
 
       <div className="board">
-        {sortedNotes.map((note) => (
+        {filteredNotes.map((note) => (
           <StickyNote
             key={note.id}
             note={note}
